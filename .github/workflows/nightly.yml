@@ -1,0 +1,58 @@
+name: nightly
+
+on:
+  schedule:
+    - cron: 0 0 * * *
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'TeamNewPipe/NewPipe'
+          ref: 'dev'
+
+      - uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          branch: dev
+
+      - uses: mosfetlang/dev-tagger-action@v1
+        id: tagger
+        with:
+          tag-prefix: 'nightly-'
+
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '8'
+
+      - name: Build apk
+        run: ./gradlew assembleRelease --stacktrace
+
+      - uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: app/build/outputs/apk/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
+      - uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.tagger.outputs.newTag }}
+          release_name: ${{ steps.tagger.outputs.newTag }}
+
+      - uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.sign_app.outputs.signedReleaseFile }}
+          asset_name: NewPipe_${{steps.tagger.outputs.newTag}}.zip
+          asset_content_type: application/zip
