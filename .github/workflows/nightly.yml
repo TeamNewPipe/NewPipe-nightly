@@ -12,6 +12,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           ref: 'dev'
+          token: ${{secrets.ACCESS_TOKEN}}
 
       - run: |
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
