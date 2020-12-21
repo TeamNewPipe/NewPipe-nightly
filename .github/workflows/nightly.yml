@@ -17,10 +17,10 @@ jobs:
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
           git pull upstream dev
 
-#      - uses: ad-m/github-push-action@v0.6.0
-#        with:
-#          github_token: ${{secrets.GITHUB_TOKEN}}
-#          branch: dev
+      - uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{secrets.ACCESS_TOKEN}}
+          branch: dev
 
       - uses: mosfetlang/dev-tagger-action@v1
         id: tagger
