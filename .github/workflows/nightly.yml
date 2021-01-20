@@ -11,22 +11,30 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
+          fetch-depth: '0'
           ref: 'dev'
           token: ${{secrets.ACCESS_TOKEN}}
+
+      - name: determine next tag
+        id: tagger
+        run: |
+          TAG=$(git describe --abbrev=0 --exact-match)
+          VERSION=$(echo $TAG | sed -e s/[^0-9]//g)
+          INCREMENT=$((VERSION + 1))
+          NEW_TAG="nightly-${INCREMENT}"
+          echo next tag '${NEW_TAG}'
+          echo "::set-output name=new_tag::${NEW_TAG}"
 
       - run: |
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
           git pull upstream dev
 
+      - run: git tag ${{ steps.tagger.outputs.new_tag }}
+
       - uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{secrets.ACCESS_TOKEN}}
           branch: dev
-
-      - uses: mosfetlang/dev-tagger-action@v1
-        id: tagger
-        with:
-          tag-prefix: 'nightly-'
 
       - uses: actions/setup-java@v1
         with:
@@ -49,8 +57,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.tagger.outputs.newTag }}
-          release_name: ${{ steps.tagger.outputs.newTag }}
+          tag_name: ${{ steps.tagger.outputs.new_tag }}
+          release_name: ${{ steps.tagger.outputs.new_tag }}
           commitish: dev
 
       - uses: actions/upload-release-asset@v1
@@ -59,5 +67,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.sign_app.outputs.signedReleaseFile }}
-          asset_name: NewPipe_${{steps.tagger.outputs.newTag}}.apk
+          asset_name: NewPipe_${{steps.tagger.outputs.new_tag}}.apk
           asset_content_type: application/zip
