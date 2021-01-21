@@ -29,7 +29,7 @@ jobs:
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
           git pull upstream dev
 
-      - run: git tag ${{ steps.tagger.outputs.new_tag }}
+      - run: git tag -a ${{ steps.tagger.outputs.new_tag }} -m "${{ steps.tagger.outputs.new_tag }}"
 
       - uses: ad-m/github-push-action@v0.6.0
         with:
