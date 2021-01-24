@@ -18,7 +18,7 @@ jobs:
       - name: determine next tag
         id: tagger
         run: |
-          TAG=$(git describe --abbrev=0 --exact-match)
+          TAG=$(git tag --sort=-v:refname | grep nightly- | head -n 1)
           VERSION=$(echo $TAG | sed -e s/[^0-9]//g)
           INCREMENT=$((VERSION + 1))
           NEW_TAG="nightly-${INCREMENT}"
