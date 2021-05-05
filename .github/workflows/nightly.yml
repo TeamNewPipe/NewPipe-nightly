@@ -15,8 +15,22 @@ jobs:
           ref: 'dev'
           token: ${{secrets.ACCESS_TOKEN}}
 
-      - name: determine next tag
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '8'
+
+      - name: Build apk
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Check for new commits
+        run : |
+          if git log --since=1.days; then
+            echo "new_commit=true" >> $GITHUB_ENV
+          fi 
+
+      - name: Determine next tag
         id: tagger
+        if: env.new_commit == 'true'
         run: |
           TAG=$(git tag --sort=-v:refname | grep nightly- | head -n 1)
           VERSION=$(echo $TAG | sed -e s/[^0-9]//g)
@@ -25,25 +39,26 @@ jobs:
           echo next tag '${NEW_TAG}'
           echo "::set-output name=new_tag::${NEW_TAG}"
 
-      - run: |
+      - name: "Pull upstream"
+        if: env.new_commit == 'true'
+        run: |
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
           git pull upstream dev
 
-      - run: git tag ${{ steps.tagger.outputs.new_tag }}
+      - name: "Tag commit"
+        if: env.new_commit == 'true'
+        run: git tag ${{ steps.tagger.outputs.new_tag }}
 
-      - uses: ad-m/github-push-action@v0.6.0
+      - name: "Push to nightly repo"
+        if: env.new_commit == 'true'
+        uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{secrets.ACCESS_TOKEN}}
           branch: dev
 
-      - uses: actions/setup-java@v1
-        with:
-          java-version: '8'
-
-      - name: Build apk
-        run: ./gradlew assembleRelease --stacktrace
-
-      - uses: r0adkll/sign-android-release@v1
+      - name: "Sign release"
+        if: env.new_commit == 'true'
+        uses: r0adkll/sign-android-release@v1
         id: sign_app
         with:
           releaseDirectory: app/build/outputs/apk/release
@@ -52,7 +67,9 @@ jobs:
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
-      - uses: actions/create-release@v1
+      - name: "Create GitHub release"
+        if: env.new_commit == 'true'
+        uses: actions/create-release@v1
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,7 +78,9 @@ jobs:
           release_name: ${{ steps.tagger.outputs.new_tag }}
           commitish: dev
 
-      - uses: actions/upload-release-asset@v1
+      - name: "Upload release APK"
+        if: env.new_commit == 'true'
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
