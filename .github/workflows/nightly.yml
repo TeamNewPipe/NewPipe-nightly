@@ -30,7 +30,7 @@ jobs:
 
       - name: Determine next tag
         id: tagger
-        if: env.new_commit == 'true'
+        if: ${{ env.new_commit == 'true' }}
         run: |
           TAG=$(git tag --sort=-v:refname | grep nightly- | head -n 1)
           VERSION=$(echo $TAG | sed -e s/[^0-9]//g)
@@ -40,24 +40,24 @@ jobs:
           echo "::set-output name=new_tag::${NEW_TAG}"
 
       - name: "Pull upstream"
-        if: env.new_commit == 'true'
+        if: ${{ env.new_commit == 'true' }}
         run: |
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
           git pull upstream dev
 
       - name: "Tag commit"
-        if: env.new_commit == 'true'
+        if: ${{ env.new_commit == 'true' }}
         run: git tag ${{ steps.tagger.outputs.new_tag }}
 
       - name: "Push to nightly repo"
-        if: env.new_commit == 'true'
+        if: ${{ env.new_commit == 'true' }}
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{secrets.ACCESS_TOKEN}}
           branch: dev
 
       - name: "Sign release"
-        if: env.new_commit == 'true'
+        if: ${{ env.new_commit == 'true' }}
         uses: r0adkll/sign-android-release@v1
         id: sign_app
         with:
@@ -68,7 +68,7 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
 
       - name: "Create GitHub release"
-        if: env.new_commit == 'true'
+        if: ${{ env.new_commit == 'true' }}
         uses: actions/create-release@v1
         id: create_release
         env:
@@ -79,7 +79,7 @@ jobs:
           commitish: dev
 
       - name: "Upload release APK"
-        if: env.new_commit == 'true'
+        if: ${{ env.new_commit == 'true' }}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
