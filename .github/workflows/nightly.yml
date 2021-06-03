@@ -28,6 +28,10 @@ jobs:
             echo "New commits found"
             echo "new_commit=true" >> $GITHUB_ENV
           fi 
+          
+      - name: debug env variable
+        run: |
+          echo ${{ env.new_commit }}
 
       - name: Determine next tag
         id: tagger
