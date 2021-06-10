@@ -22,20 +22,8 @@ jobs:
       - name: Build apk
         run: ./gradlew assembleRelease --stacktrace
 
-      - name: Check for new commits
-        run : |
-          if [[ $(git log --since=1.days) ]]; then
-            echo "New commits found"
-            echo "new_commit=true" >> $GITHUB_ENV
-          fi 
-          
-      - name: debug env variable
-        run: |
-          echo ${{ env.new_commit }}
-
       - name: Determine next tag
         id: tagger
-        if: ${{ env.new_commit == 'true' }}
         run: |
           TAG=$(git tag --sort=-v:refname | grep nightly- | head -n 1)
           VERSION=$(echo $TAG | sed -e s/[^0-9]//g)
@@ -49,6 +37,13 @@ jobs:
         run: |
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
           git pull upstream dev
+
+      - name: "Check for new commits"
+        run : |
+          if [[ $(git log --since=1.days) ]]; then
+            echo "New commits found"
+            echo "new_commit=true" >> $GITHUB_ENV
+          fi 
 
       - name: "Tag commit"
         if: ${{ env.new_commit == 'true' }}
