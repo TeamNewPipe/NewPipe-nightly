@@ -33,7 +33,6 @@ jobs:
           echo "::set-output name=new_tag::${NEW_TAG}"
 
       - name: "Pull upstream"
-        if: ${{ env.new_commit == 'true' }}
         run: |
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
           git pull upstream dev
