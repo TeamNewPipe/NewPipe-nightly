@@ -2,7 +2,7 @@ name: nightly
 
 on:
   schedule:
-    - cron: 0 0 * * *
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 jobs:
@@ -19,10 +19,7 @@ jobs:
         with:
           java-version: '8'
 
-      - name: Build apk
-        run: ./gradlew assembleRelease --stacktrace
-
-      - name: Determine next tag
+      - name: "Determine next tag"
         id: tagger
         run: |
           TAG=$(git tag --sort=-v:refname | grep nightly- | head -n 1)
@@ -36,6 +33,9 @@ jobs:
         run: |
           git remote add upstream https://github.com/TeamNewPipe/NewPipe.git
           git pull upstream dev
+
+      - name: "Build release apk"
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: "Check for new commits"
         run : |
