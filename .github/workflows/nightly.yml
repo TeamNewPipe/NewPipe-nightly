@@ -37,7 +37,7 @@ jobs:
           git pull upstream dev
 
       - name: "Build release apk"
-        run: ./gradlew assembleRelease --stacktrace
+        run: ./gradlew assembleRelease --stacktrace -DpackageSuffix=nightly
 
       - name: "Check for new commits"
         run : |
