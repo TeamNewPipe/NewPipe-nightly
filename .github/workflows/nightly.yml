@@ -67,6 +67,13 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           buildToolsVersion: 33.0.0
 
+      - name: "Rename apk"
+        if: ${{ env.new_commit == 'true' }}
+        id: rename_apk
+        run: |
+          mv ${{steps.sign_app.outputs.signedFile}} app/build/outputs/apk/release/NewPipe_${{steps.tagger.outputs.new_tag}}.apk
+          echo "::set-output name=apkFile::app/build/outputs/apk/release/NewPipe_${{steps.tagger.outputs.new_tag}}.apk"
+
       - name: "Create GitHub release with APK"
         if: ${{ env.new_commit == 'true' }}
         uses: softprops/action-gh-release@v1
@@ -76,4 +83,4 @@ jobs:
           target_commitish: dev
           draft: true
           files: |
-            ${{steps.sign_app.outputs.signedFile}}
+            ${{steps.rename_apk.outputs.apkFile}}
