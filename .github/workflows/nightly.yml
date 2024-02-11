@@ -67,24 +67,12 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           buildToolsVersion: 33.0.0
 
-      - name: "Create GitHub release"
+      - name: "Create GitHub release with APK"
         if: ${{ env.new_commit == 'true' }}
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.tagger.outputs.new_tag }}
-          release_name: ${{ steps.tagger.outputs.new_tag }}
-          commitish: dev
-
-      - name: "Upload release APK"
-        if: ${{ env.new_commit == 'true' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.sign_app.outputs.signedReleaseFile }}
-          asset_name: NewPipe_${{steps.tagger.outputs.new_tag}}.apk
-          asset_content_type: application/zip
+          target_commitish: dev
+          files: |
+            ${{steps.sign_app.outputs.signedFile}}/NewPipe_${{steps.tagger.outputs.new_tag}}.apk
