@@ -74,5 +74,6 @@ jobs:
         with:
           tag_name: ${{ steps.tagger.outputs.new_tag }}
           target_commitish: dev
+          draft: true
           files: |
-            ${{steps.sign_app.outputs.signedFile}}/NewPipe_${{steps.tagger.outputs.new_tag}}.apk
+            ${{steps.sign_app.outputs.signedFile}}
