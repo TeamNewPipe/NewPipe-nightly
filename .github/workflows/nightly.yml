@@ -41,8 +41,10 @@ jobs:
 
       - name: "Check for new commits"
         run : |
-            echo "New commits found"
-            echo "new_commit=true" >> $GITHUB_ENV
+          if [[ $(git log --since=1.days) ]]; then
+          echo "New commits found"
+          echo "new_commit=true" >> $GITHUB_ENV
+          fi 
 
       - name: "Tag commit"
         if: ${{ env.new_commit == 'true' }}
@@ -81,6 +83,5 @@ jobs:
         with:
           tag_name: ${{ steps.tagger.outputs.new_tag }}
           target_commitish: dev
-          draft: true
           files: |
             ${{steps.rename_apk.outputs.apkFile}}
