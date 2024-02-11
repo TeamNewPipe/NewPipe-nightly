@@ -39,7 +39,10 @@ jobs:
       - name: "Build release apk"
         run: ./gradlew assembleRelease --stacktrace -DpackageSuffix=nightly
 
-
+      - name: "Check for new commits"
+        run : |
+            echo "New commits found"
+            echo "new_commit=true" >> $GITHUB_ENV
 
       - name: "Tag commit"
         if: ${{ env.new_commit == 'true' }}
