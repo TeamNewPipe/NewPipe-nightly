@@ -59,33 +59,29 @@ jobs:
 
       - name: "Sign release"
         if: ${{ env.new_commit == 'true' }}
-        uses: r0adkll/sign-android-release@v1
+        uses: ilharp/sign-android-release@v1
         id: sign_app
         with:
-          releaseDirectory: app/build/outputs/apk/release
-          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
-          alias: ${{ secrets.ALIAS }}
+          releaseDir: app/build/outputs/apk/release
+          signingKey: ${{ secrets.SIGNING_KEY }}
+          keyAlias: ${{ secrets.ALIAS }}
           keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyPassword: ${{ secrets.KEY_PASSWORD }}
+          buildToolsVersion: 33.0.0
 
-      - name: "Create GitHub release"
+      - name: "Rename apk"
         if: ${{ env.new_commit == 'true' }}
-        uses: actions/create-release@v1
+        id: rename_apk
+        run: |
+          mv ${{steps.sign_app.outputs.signedFile}} app/build/outputs/apk/release/NewPipe_${{steps.tagger.outputs.new_tag}}.apk
+          echo "::set-output name=apkFile::app/build/outputs/apk/release/NewPipe_${{steps.tagger.outputs.new_tag}}.apk"
+
+      - name: "Create GitHub release with APK"
+        if: ${{ env.new_commit == 'true' }}
+        uses: softprops/action-gh-release@v1
         id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.tagger.outputs.new_tag }}
-          release_name: ${{ steps.tagger.outputs.new_tag }}
-          commitish: dev
-
-      - name: "Upload release APK"
-        if: ${{ env.new_commit == 'true' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.sign_app.outputs.signedReleaseFile }}
-          asset_name: NewPipe_${{steps.tagger.outputs.new_tag}}.apk
-          asset_content_type: application/zip
+          target_commitish: dev
+          files: |
+            ${{steps.rename_apk.outputs.apkFile}}
